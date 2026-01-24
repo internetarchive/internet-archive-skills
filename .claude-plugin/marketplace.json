@@ -1,0 +1,13 @@
+{
+  "name": "internet-archive-skills",
+  "owner": {
+    "name": "rajbot"
+  },
+  "plugins": [
+    {
+      "name": "ia",
+      "source": ".",
+      "description": "Interact with Internet Archive (archive.org) - upload, download, and search using the ia CLI tool"
+    }
+  ]
+}
