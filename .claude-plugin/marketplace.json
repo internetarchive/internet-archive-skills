@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "ia",
-      "source": ".",
+      "source": "./",
       "description": "Interact with Internet Archive (archive.org) - upload, download, and search using the ia CLI tool"
     }
   ]
