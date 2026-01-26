@@ -109,7 +109,25 @@ If not configured (shows error or empty), the user needs to set up credentials:
 2. **Get credentials**: IA-S3 keys from https://archive.org/account/s3.php
 3. **Config location**: Saves to `~/.config/ia.ini`
 
-Environment variable alternative:
+### Configure Options
+
+| Option | Description |
+|--------|-------------|
+| `--whoami` | Print current authenticated user |
+| `--show` | Print current config as JSON |
+| `--check` | Validate IA-S3 keys (exit 0 if valid, 1 otherwise) |
+
+```bash
+# Show current config
+ia configure --show
+
+# Validate keys (useful in scripts)
+ia configure --check && echo "Keys valid"
+```
+
+### Environment Variables
+
+Alternative to config file:
 ```bash
 export IA_ACCESS_KEY_ID="your-access-key"
 export IA_SECRET_ACCESS_KEY="your-secret-key"
@@ -127,10 +145,52 @@ ia search '<query>'
 
 ### Search Parameters
 
-- Pagination: `--parameters="page=N&rows=N"` (default rows=50)
-- Output format: `--itemlist` (identifiers only, one per line)
-- Sort: `--parameters="sort[]=field+asc"` or `sort[]=field+desc`
-- Full-text search: `-F` or `--fts` (search within text content, not just metadata)
+| Parameter | Description |
+|-----------|-------------|
+| `--itemlist` | Output identifiers only, one per line |
+| `-n, --num-found` | Print only the count of results |
+| `-s, --sort` | Sort results: `--sort='field desc'` or `--sort='field asc'` |
+| `-f, --field` | Return specific metadata fields (repeatable) |
+| `-F, --fts` | Full-text search (search within text content, not just metadata) |
+| `--parameters` | Raw query parameters: `--parameters="page=N&rows=N"` |
+
+```bash
+# Get result count only
+ia search 'collection:nasa' -n
+
+# Sort by date descending
+ia search 'mediatype:texts' --sort='date desc'
+
+# Return specific fields
+ia search 'collection:nasa' --field=identifier --field=title
+```
+
+### Sort Fields
+
+Common sort fields for use with `--sort`:
+
+| Field | Description |
+|-------|-------------|
+| `date` | Content date |
+| `publicdate` | When item was published to archive.org |
+| `addeddate` | When added to archive |
+| `updatedate` | Last updated |
+| `title` / `titleSorter` | Alphabetical by title |
+| `creator` / `creatorSorter` | Alphabetical by creator |
+| `downloads` | Total downloads |
+| `week` | Downloads this week |
+| `month` | Downloads this month |
+| `num_reviews` | Number of reviews |
+| `num_favorites` | Number of favorites |
+| `item_size` | Total item size |
+| `files_count` | Number of files |
+
+Use `asc` or `desc` suffix:
+```bash
+ia search 'mediatype:audio' --sort='downloads desc'
+ia search 'collection:books' --sort='publicdate asc'
+ia search 'creator:NASA' --sort='title asc'
+```
 
 ### Search Query Syntax
 
@@ -291,16 +351,34 @@ ia download <identifier>
 
 | Parameter | Description |
 |-----------|-------------|
-| `--glob="*.ext"` | Download only matching files |
+| `--glob="*.ext"` | Download only matching files (use `\|` for multiple: `'*.mp4\|*.webm'`) |
 | `--exclude="*pattern*"` | Exclude files matching pattern |
 | `--format="FORMAT"` | Download specific derivative format |
+| `--source=SOURCE` | Filter by source: `original`, `derivative`, `metadata` |
+| `--exclude-source=SOURCE` | Exclude by source type |
 | `--destdir=path` | Download to specific directory |
 | `--no-directories` | Flatten directory structure |
+| `-s, --stdout` | Write file to stdout (for piping) |
 | `--dry-run` | Show what would be downloaded |
 | `--checksum` | Skip files that already exist with correct checksum |
 | `--on-the-fly` | Download on-the-fly files (generated derivatives) |
 | `--search="QUERY"` | Download from search results |
 | `--itemlist=FILE` | Download items listed in file |
+
+#### Filtering by Source Type
+
+Use `--source` and `--exclude-source` to filter by file origin:
+
+```bash
+# Download only original files (skip all derivatives)
+ia download my-item --source=original
+
+# Download originals and metadata, skip derivatives
+ia download my-item --exclude-source=derivative
+
+# Download only metadata files
+ia download my-item --source=metadata
+```
 
 ### Examples
 
@@ -359,9 +437,12 @@ The `mediatype` field is required. Common values:
 | `--metadata="key:value"` | Set metadata (repeatable) |
 | `--header="key:value"` | Set HTTP header |
 | `--checksum` | Skip files already uploaded |
+| `-v, --verify` | Verify data wasn't corrupted after upload |
 | `--no-derive` | Skip derivative processing |
 | `--retries=N` | Number of retry attempts |
 | `--remote-name=NAME` | Set remote filename (for stdin uploads) |
+| `--keep-directories` | Preserve directory structure in remote filename |
+| `-o, --open-after-upload` | Open item in browser after upload |
 | `--file-metadata=FILE` | File-level metadata from JSONL file |
 | `--spreadsheet=FILE` | Bulk upload from CSV spreadsheet |
 
@@ -442,6 +523,9 @@ ia metadata <identifier>
 # Extract specific field with jq
 ia metadata <identifier> | jq '.metadata.date'
 
+# List file formats contained in an item
+ia metadata <identifier> --formats
+
 # Modify metadata (set or replace)
 ia metadata <identifier> --modify="title:New Title"
 ia metadata <identifier> --modify="foo:bar" --modify="baz:value"
@@ -475,9 +559,26 @@ ia list <identifier>
 
 Shows all files with details (name, size, format).
 
-Parameters:
-- `--columns=name,size` - Specify columns to show
-- `--glob="*.pdf"` - Filter by pattern
+### List Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `--columns=name,size` | Specify columns to show |
+| `--glob="*.pdf"` | Filter by pattern |
+| `-l, --location` | Print full URLs for each file |
+| `-a, --all` | List all available file information |
+| `-v, --verbose` | Print column headers |
+
+```bash
+# List with full URLs
+ia list my-item --location
+
+# List all file info with headers
+ia list my-item --all --verbose
+
+# List specific columns
+ia list my-item --columns=name,size,format
+```
 
 ## Tasks and Jobs
 
