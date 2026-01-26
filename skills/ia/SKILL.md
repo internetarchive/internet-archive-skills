@@ -67,18 +67,74 @@ ia search '<query>'
 
 ### Search Query Syntax
 
+The Internet Archive uses **Apache Lucene query syntax**. By default, the operator is AND (all terms must be present).
+
+#### Query Operators
+
+| Operator | Description |
+|----------|-------------|
+| `AND` | All terms must be present (default) |
+| `OR` | Any of the terms can be present |
+| `NOT` | Exclude documents with term (requires at least one positive term) |
+| `( )` | Group clauses to form subqueries |
+
+#### Field-Specific Searches
+
+Use `field:value` syntax to search specific metadata fields:
+
 | Query | Description |
 |-------|-------------|
-| `'subject:"topic"'` | Search by subject |
-| `'collection:name'` | Items in a collection |
-| `'creator:"Author Name"'` | By creator/author |
 | `'title:"search text"'` | By title |
-| `'mediatype:texts'` | By media type |
-| `'date:[2020-01-01 TO 2024-12-31]'` | Date range |
+| `'creator:"Author Name"'` | By creator/author |
+| `'subject:"topic"'` | Search by subject |
+| `'description:"text"'` | By description |
+| `'collection:name'` | Items in a collection |
+| `'mediatype:texts'` | By media type (texts, movies, audio, software, image, data) |
+| `'contributor:smithsonian'` | By contributor |
+| `'language:eng'` | By language code |
 
-Combine queries with AND, OR, NOT:
+#### Range Queries
+
+Search values between bounds using brackets or parentheses:
+
+| Syntax | Description |
+|--------|-------------|
+| `[1000 TO 2000]` | Inclusive range (includes bounds) |
+| `{1000 TO 2000}` | Exclusive range (excludes bounds) |
+| `[1000 TO null]` | Open-ended range (1000 or greater) |
+| `[null TO 2000]` | Open-ended range (2000 or less) |
+
+#### Date Fields
+
+Searchable date fields: `addeddate`, `createdate`, `date`, `indexdate`, `publicdate`, `reviewdate`, `updatedate`, `oai_updatedate`
+
+| Query | Description |
+|-------|-------------|
+| `'date:[2020-01-01 TO 2024-12-31]'` | Date range |
+| `'publicdate:[2024-01-01 TO 2024-06-30]'` | By publication date |
+| `'indexdate:[2024-01-01T00:00:00Z TO 2024-12-31T23:59:59Z]'` | With timestamp |
+| `'date:2024*'` | Wildcard for year (non-range) |
+
+#### Fuzzy Queries
+
+Append `~` for approximate spelling matches:
 ```bash
+ia search 'title:buttonwood~'
+```
+
+#### Combined Queries
+
+```bash
+# AND is implicit between terms
+ia search 'collection:nasa mediatype:image'
+
+# Explicit operators
 ia search 'collection:nasa AND mediatype:image'
+ia search 'mediatype:texts OR mediatype:audio'
+ia search 'collection:opensource NOT mediatype:software'
+
+# Grouped subqueries
+ia search '(mediatype:texts OR mediatype:audio) AND creator:"Mark Twain"'
 ```
 
 ### Full-Text Search
