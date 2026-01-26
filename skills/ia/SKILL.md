@@ -28,6 +28,24 @@ Items must belong to a collection. Recommended limits: 100GB total size, 10,000 
 
 For more details, see: https://archive.org/developers/items.html
 
+## Derivatives
+
+When you upload files to the Internet Archive, the system automatically generates derivative files - converted versions in different formats and resolutions. For example:
+
+- **Video**: Transcoded to h.264, Ogg, and various bitrates
+- **Audio**: Converted to MP3 (multiple bitrates), Ogg Vorbis, FLAC
+- **Text/Books**: OCR processing, searchable PDFs, EPUB, DjVu
+- **Images**: Thumbnails, JPEG 2000, different resolutions
+
+Derivatives make content accessible across different devices and bandwidths. You can identify derivatives in `ia list` output - they have an `original` field pointing to their source file.
+
+To skip derivative generation during upload, use `--no-derive`:
+```bash
+ia upload my-item file.mp4 --metadata="mediatype:movies" --no-derive
+```
+
+For the complete list of source formats and their generated derivatives, see: **https://archive.org/help/derivatives.php**
+
 ## Metadata Schema
 
 Internet Archive items use XML-based metadata. Key points:
