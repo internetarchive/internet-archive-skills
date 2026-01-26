@@ -3,10 +3,10 @@
   "version": "1.1.0",
   "description": "Claude Code skills for interacting with the Internet Archive (archive.org) - upload, download, and search using the ia CLI tool",
   "author": {
-    "name": "rajbot",
-    "url": "https://github.com/rajbot"
+    "name": "internetarchive",
+    "url": "https://github.com/internetarchive"
   },
-  "repository": "https://github.com/rajbot/internet-archive-skills",
+  "repository": "https://github.com/internetarchive/internet-archive-skills",
   "license": "AGPL-3.0",
   "keywords": ["internet-archive", "archive.org", "ia", "archiving", "download", "upload"]
 }

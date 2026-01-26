@@ -23,7 +23,7 @@ A Claude Code skill that enables Claude to interact with the [Internet Archive](
 Install directly from within Claude Code:
 
 ```
-/plugin marketplace add https://github.com/rajbot/internet-archive-skills.git
+/plugin marketplace add https://github.com/internetarchive/internet-archive-skills.git
 /plugin install ia@internet-archive-skills
 ```
 
@@ -31,7 +31,7 @@ Install directly from within Claude Code:
 
 ```bash
 # Clone the repository
-git clone https://github.com/rajbot/internet-archive-skills.git
+git clone https://github.com/internetarchive/internet-archive-skills.git
 cd internet-archive-skills
 
 # Create skills directory if it doesn't exist
@@ -45,7 +45,7 @@ ln -s "$(pwd)/skills/ia" ~/.claude/skills/ia
 
 ```bash
 # Clone the repository
-git clone https://github.com/rajbot/internet-archive-skills.git
+git clone https://github.com/internetarchive/internet-archive-skills.git
 
 # Create skills directory and copy
 mkdir -p ~/.claude/skills
@@ -60,7 +60,7 @@ mkdir -p ~/.claude/skills/ia
 
 # Download the skill file directly
 curl -o ~/.claude/skills/ia/SKILL.md \
-  https://raw.githubusercontent.com/rajbot/internet-archive-skills/main/skills/ia/SKILL.md
+  https://raw.githubusercontent.com/internetarchive/internet-archive-skills/main/skills/ia/SKILL.md
 ```
 
 ## Usage
