@@ -2,6 +2,7 @@
 name: ia
 description: Interact with Internet Archive (archive.org) - upload files, download items, and search the archive using the ia CLI tool. Use when working with archive.org, archiving content, or retrieving historical data.
 allowed-tools: Bash
+argument-hint: [search query | identifier | command]
 ---
 
 # Internet Archive CLI Skill
@@ -63,6 +64,18 @@ Alternative installation methods:
 - `pip install internetarchive`
 
 After installation, verify it works with `ia --version`.
+
+## Global Options
+
+These options work with all `ia` commands:
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message |
+| `-v, --version` | Display version |
+| `-c FILE, --config-file` | Path to config file |
+| `-l, --log` | Enable logging |
+| `-d, --debug` | Enable debug output |
 
 ## Configuration and Authentication
 
@@ -156,6 +169,39 @@ Searchable date fields: `addeddate`, `createdate`, `date`, `indexdate`, `publicd
 Append `~` for approximate spelling matches:
 ```bash
 ia search 'title:buttonwood~'
+
+# Boost fuzzy matches with weights
+ia search '(title:buttonwood~)^150 OR (subject:buttonwood~)^100'
+```
+
+#### Searching for Missing Fields
+
+Find items where a field doesn't exist:
+```bash
+ia search 'collection:microfiche AND NOT _exists_:creator'
+```
+
+#### Searching by Uploader
+
+Search by uploader's user item, screen name, or email:
+```bash
+ia search '_uploader_useritem:@username'
+ia search '_uploader_screenname:"Display Name"'
+ia search 'uploader:your@email.com'
+```
+
+#### Additional Searchable Fields
+
+Beyond standard metadata, you can search by:
+- `downloads` - download count
+- `item_size` - total item size in bytes
+- `files_count` - number of files
+- `collection_size` - size of collection
+- `item_count` - items in collection
+
+```bash
+ia search 'collection:opensource AND downloads:[1000 TO null]'
+ia search 'mediatype:movies AND item_size:[1000000000 TO null]'
 ```
 
 #### Combined Queries
@@ -229,25 +275,42 @@ ia download <identifier>
 |-----------|-------------|
 | `--glob="*.ext"` | Download only matching files |
 | `--exclude="*pattern*"` | Exclude files matching pattern |
+| `--format="FORMAT"` | Download specific derivative format |
 | `--destdir=path` | Download to specific directory |
 | `--no-directories` | Flatten directory structure |
 | `--dry-run` | Show what would be downloaded |
 | `--checksum` | Skip files that already exist with correct checksum |
+| `--on-the-fly` | Download on-the-fly files (generated derivatives) |
+| `--search="QUERY"` | Download from search results |
+| `--itemlist=FILE` | Download items listed in file |
 
 ### Examples
 
 ```bash
 # Download all files from an item
-ia download nasa_apollo_images
+ia download TripDown1905
 
-# Download only JPG files
-ia download nasa_apollo_images --glob="*.jpg"
+# Download specific files by name
+ia download TripDown1905 file1.mp4 file2.ogv
+
+# Download only MP4 files
+ia download TripDown1905 --glob="*.mp4"
+
+# Download MP4s but exclude low-quality versions
+ia download TripDown1905 --glob="*.mp4" --exclude="*512kb*"
+
+# Download specific format
+ia download TripDown1905 --format='512Kb MPEG4'
 
 # Download to specific directory
-ia download nasa_apollo_images --destdir=./downloads
+ia download TripDown1905 --destdir=./downloads
 
 # Download from search results
 ia download --search 'collection:opensource_movies' --glob="*.mp4"
+
+# Download items from a list file
+ia search 'collection:glasgowschoolofart' --itemlist > itemlist.txt
+ia download --itemlist itemlist.txt
 
 # Preview what will be downloaded
 ia download my_item --dry-run
@@ -280,6 +343,9 @@ The `mediatype` field is required. Common values:
 | `--checksum` | Skip files already uploaded |
 | `--no-derive` | Skip derivative processing |
 | `--retries=N` | Number of retry attempts |
+| `--remote-name=NAME` | Set remote filename (for stdin uploads) |
+| `--file-metadata=FILE` | File-level metadata from JSONL file |
+| `--spreadsheet=FILE` | Bulk upload from CSV spreadsheet |
 
 ### Common Metadata Fields
 
@@ -307,38 +373,75 @@ ia upload my-archive file1.pdf file2.pdf file3.pdf \
   --metadata="mediatype:texts" \
   --metadata="title:Document Collection"
 
-# Upload with checksum verification
+# Upload with checksum verification and retries
 ia upload my-item large-file.zip \
   --metadata="mediatype:data" \
-  --checksum
+  --checksum \
+  --retries=10
+
+# Upload from stdin
+cat data.gz | ia upload my-item - \
+  --remote-name=data.gz \
+  --metadata="mediatype:data"
 
 # Bulk upload using spreadsheet
 ia upload --spreadsheet=metadata.csv
 ```
+
+**Note:** Items receive `data` mediatype by default if not specified, and mediatype cannot be changed after upload.
 
 ### Identifier Guidelines
 
 - Use lowercase letters, numbers, and hyphens
 - No spaces or special characters
 - Keep it descriptive but concise
-- Check if identifier exists: `ia metadata <identifier>`
+- Check if identifier exists: `ia metadata <identifier> --exists`
+
+### Item Thumbnail Image
+
+To set a custom thumbnail for an item, upload an image named `<identifier>_itemimage.jpg`:
+
+```bash
+ia upload my-item my-item_itemimage.jpg
+```
+
+### Restricting Downloads
+
+To make files streamable but not downloadable, add the item to the `stream_only` collection:
+
+```bash
+ia metadata <identifier> --append-list="collection:stream_only"
+```
 
 ## Metadata Operations
 
 View and modify item metadata:
 
 ```bash
-# View metadata
+# View metadata (JSON output)
 ia metadata <identifier>
 
-# Modify metadata
-ia metadata <identifier> --modify="field:value"
+# Extract specific field with jq
+ia metadata <identifier> | jq '.metadata.date'
 
-# Append to existing field
-ia metadata <identifier> --append="subject:new-topic"
+# Modify metadata (set or replace)
+ia metadata <identifier> --modify="title:New Title"
+ia metadata <identifier> --modify="foo:bar" --modify="baz:value"
 
-# Remove metadata field
-ia metadata <identifier> --remove="field"
+# Remove a metadata field
+ia metadata <identifier> --modify="fieldname:REMOVE_TAG"
+
+# Append value to existing field
+ia metadata <identifier> --append="title:Subtitle Here"
+
+# Append to list field (e.g., subjects)
+ia metadata <identifier> --append-list="subject:new topic"
+
+# Remove specific value from list field
+ia metadata <identifier> --remove="subject:old topic"
+
+# Modify file-level metadata
+ia metadata <identifier> --target="files/foo.txt" --modify="title:My File"
 
 # Bulk updates from spreadsheet
 ia metadata --spreadsheet=metadata.csv
@@ -360,11 +463,100 @@ Parameters:
 
 ## Tasks and Jobs
 
-Check status of uploads and other operations:
+Check status of catalog tasks (uploads, derives, etc.):
 
 ```bash
+# Check tasks for a specific item
 ia tasks <identifier>
+
+# Check all your tasks
+ia tasks
 ```
+
+### Darking and Undarking Items
+
+To make an item dark (hidden from public access) or undark it:
+
+```bash
+# Dark an item (requires comment)
+ia tasks <identifier> --cmd=make_dark.php --comment="Reason for darking"
+
+# Undark an item
+ia tasks <identifier> --cmd=make_undark.php --comment="Reason for undarking"
+```
+
+## Bulk Operations with GNU Parallel
+
+For batch processing many items, use [GNU Parallel](https://www.gnu.org/software/parallel/) to run `ia` commands concurrently.
+
+### Installation
+
+```bash
+# macOS
+brew install parallel
+
+# Debian/Ubuntu
+apt install parallel
+```
+
+### Basic Usage
+
+Pipe item identifiers to parallel, using `{}` as placeholder:
+
+```bash
+# Fetch metadata for many items
+cat itemlist.txt | parallel 'ia metadata {}'
+
+# Download multiple items
+cat itemlist.txt | parallel 'ia download {}'
+```
+
+### Careful Batch Processing
+
+For reliable bulk operations, use job logging to track progress and handle failures:
+
+```bash
+# Step 1: Create item list
+ia search 'collection:myproject' --itemlist > itemlist.txt
+
+# Step 2: Run with job logging
+cat itemlist.txt | parallel --joblog job.log 'ia download {}'
+
+# Step 3: Check for failures
+echo $?  # 0 = all succeeded
+
+# Step 4: Retry only failed jobs
+parallel --retry-failed --joblog job.log
+```
+
+### Job Log Benefits
+
+The `--joblog` file tracks each command's exit status, allowing you to:
+- Resume interrupted batch jobs
+- Retry only failed items without re-processing successes
+- Audit what succeeded and failed
+
+### Dry Run First
+
+Always preview before bulk execution:
+
+```bash
+cat itemlist.txt | parallel --dry-run 'ia download {}'
+```
+
+### Rate Limiting
+
+Control concurrency to avoid overwhelming the server:
+
+```bash
+# Limit to 4 concurrent jobs
+cat itemlist.txt | parallel -j4 'ia download {}'
+
+# Add delay between jobs
+cat itemlist.txt | parallel --delay 1 'ia download {}'
+```
+
+See: https://archive.org/developers/internetarchive/parallel.html
 
 ## Best Practices
 
@@ -391,6 +583,7 @@ ia tasks <identifier>
 ```bash
 # Search
 ia search 'query'
+ia search 'query' --itemlist
 
 # Download
 ia download <identifier>
@@ -406,9 +599,43 @@ ia metadata <identifier> --modify="title:New Title"
 # List files
 ia list <identifier>
 
-# Check config
-ia configure --print
+# Tasks
+ia tasks <identifier>
+
+# Config
+ia configure
+ia configure --whoami
 
 # Install
 uv tool install internetarchive
 ```
+
+## API Reference
+
+For programmatic access beyond the CLI, see the full developer documentation: **https://archive.org/developers**
+
+### Core APIs
+
+| API | Description |
+|-----|-------------|
+| [Items](https://archive.org/developers/items.html) | Understanding item structure and access |
+| [Metadata Schema](https://archive.org/developers/metadata-schema/) | Complete metadata field reference |
+| [Metadata Read](https://archive.org/developers/md-read.html) | Retrieve item metadata via API |
+| [Metadata Write](https://archive.org/developers/md-write.html) | Modify item metadata via API |
+| [IAS3](https://archive.org/developers/ias3.html) | S3-compatible API for uploads |
+| [Tasks](https://archive.org/developers/tasks.html) | Task queue management |
+
+### Additional APIs
+
+| API | Description |
+|-----|-------------|
+| [Changes](https://archive.org/developers/changes.html) | Track item modifications across the archive |
+| [Views](https://archive.org/developers/views_api.html) | Access viewing and download statistics |
+| [Reviews](https://archive.org/developers/reviews.html) | Manage item reviews |
+| [Simple Lists](https://archive.org/developers/simplelists.html) | Create item relationships and lists |
+| [OCR Service](https://archive.org/developers/ocr.html) | Text recognition service |
+| [PDF Service](https://archive.org/developers/pdf.html) | PDF generation and processing |
+
+### Python Library
+
+For Python integration: [internetarchive library](https://archive.org/developers/internetarchive/)

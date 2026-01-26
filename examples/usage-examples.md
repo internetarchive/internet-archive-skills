@@ -2,6 +2,8 @@
 
 Real-world examples of using the Internet Archive skill with Claude Code.
 
+> **Note:** For comprehensive command reference and query syntax, see [skills/ia/SKILL.md](../skills/ia/SKILL.md).
+
 ## Searching the Archive
 
 ### Find Public Domain Books
@@ -304,24 +306,5 @@ ia search 'uploader:your@email.com'
 ### Checking if Identifier is Available
 
 ```bash
-# If this returns nothing, the identifier is available
-ia metadata desired-identifier-name
-```
-
-### Downloading Specific Format
-
-```bash
-# Download only the EPUB versions of books
-ia download book-collection --glob="*.epub"
-
-# Download only high-res images
-ia download photo-archive --glob="*_large.jpg"
-```
-
-### Excluding Derivative Files
-
-Archive.org creates derivative files automatically. To download only originals:
-
-```bash
-ia download my-item --exclude="*_thumb*" --exclude="*_spectrogram*"
+ia metadata desired-identifier-name --exists
 ```
