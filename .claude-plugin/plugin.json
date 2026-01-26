@@ -1,6 +1,6 @@
 {
   "name": "internet-archive-skills",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude Code skills for interacting with the Internet Archive (archive.org) - upload, download, and search using the ia CLI tool",
   "author": {
     "name": "rajbot",
