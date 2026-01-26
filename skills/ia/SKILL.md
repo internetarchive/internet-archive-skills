@@ -33,7 +33,7 @@ After installation, verify it works with `ia --version`.
 Check if `ia` is configured:
 
 ```bash
-ia configure --print
+ia configure --whoami
 ```
 
 If not configured (shows error or empty), the user needs to set up credentials:
