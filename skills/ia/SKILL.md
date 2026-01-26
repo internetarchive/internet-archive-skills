@@ -63,6 +63,7 @@ ia search '<query>'
 - Pagination: `--parameters="page=N&rows=N"` (default rows=50)
 - Output format: `--itemlist` (identifiers only, one per line)
 - Sort: `--parameters="sort[]=field+asc"` or `sort[]=field+desc`
+- Full-text search: `-F` or `--fts` (search within text content, not just metadata)
 
 ### Search Query Syntax
 
@@ -80,6 +81,26 @@ Combine queries with AND, OR, NOT:
 ia search 'collection:nasa AND mediatype:image'
 ```
 
+### Full-Text Search
+
+Use the `-F` (or `--fts`) flag to search within the actual text content of items rather than just metadata. This is particularly powerful for searching text collections like books, documents, and OCR'd materials.
+
+**Basic full-text search:**
+```bash
+ia search -F 'collection:collection_name "search phrase"'
+```
+
+**How it works:**
+- Searches inside the full text of documents (OCR'd PDFs, text files, etc.)
+- More powerful than metadata-only search for finding specific quotes or passages
+- Requires items to have searchable text (OCR or text files)
+- Can be combined with collection and metadata filters
+
+**Full-text search syntax:**
+- Use quotes for exact phrases: `"complete phrase"`
+- Combine with metadata filters: `collection:name AND "text to find"`
+- Works best with text collections that have been OCR'd
+
 ### Examples
 
 ```bash
@@ -91,6 +112,15 @@ ia search 'subject:"public domain" mediatype:texts'
 
 # Get just identifiers
 ia search 'creator:"Mark Twain"' --itemlist
+
+# Full-text search within a text collection
+ia search -F 'collection:books "climate change"'
+
+# Full-text search for a specific quote in public domain texts
+ia search -F '"to be or not to be" mediatype:texts'
+
+# Full-text search with collection filter and pagination
+ia search -F 'collection:usgovernmentdocuments "artificial intelligence"' --parameters="rows=20"
 ```
 
 ## Download Operations

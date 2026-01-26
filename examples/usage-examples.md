@@ -44,6 +44,36 @@ Claude: Let me search for audio from that era.
 ia search 'mediatype:audio date:[1920-01-01 TO 1929-12-31]' --parameters="rows=30"
 ```
 
+### Full-Text Search in Text Collections
+
+```
+User: Find books that mention "quantum mechanics" in a physics collection
+
+Claude: I'll use full-text search to find that phrase within the text content of books.
+
+ia search -F 'collection:physics_books "quantum mechanics"' --parameters="rows=25"
+```
+
+### Full-Text Search for Specific Quote
+
+```
+User: I'm looking for documents that contain the phrase "four score and seven years ago"
+
+Claude: Let me search the full text of documents for that exact phrase.
+
+ia search -F '"four score and seven years ago" mediatype:texts'
+```
+
+### Full-Text Search in Government Documents
+
+```
+User: Search for "climate policy" in US government documents
+
+Claude: I'll perform a full-text search within the government documents collection.
+
+ia search -F 'collection:usgovernmentdocuments "climate policy"' --parameters="rows=50"
+```
+
 ## Downloading Content
 
 ### Download an Entire Item
