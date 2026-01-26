@@ -19,12 +19,24 @@ Every item contains:
 - `<identifier>_meta.xml` - item-level metadata
 - `<identifier>_files.xml` - file-level metadata
 
-Items must belong to a collection. Recommended limits: 100GB total size, 10,000 files max.
+Items must belong to a collection.
+
+### Item Limits
+
+| Constraint | Recommended | Hard Limit |
+|------------|-------------|------------|
+| Item total size | Under 100GB | ~1TB |
+| Files per item | Under 10,000 | 250,000 (performance degrades >10,000) |
+| Single file size | Under 50GB | 500-700GB |
+| Daily upload | Under 1,000 files | 5,000 files (zips count as 1) |
 
 **Permanent URL patterns:**
 - Details page: `https://archive.org/details/<identifier>`
 - Download directory: `https://archive.org/download/<identifier>`
 - Specific file: `https://archive.org/download/<identifier>/<filename>`
+- Item history: `https://archive.org/history/<identifier>`
+
+**Warning:** Never link to server-specific URLs like `ia802304.us.archive.org` - these break when items migrate between servers. Always use the canonical `archive.org` URLs above.
 
 For more details, see: https://archive.org/developers/items.html
 
@@ -62,6 +74,27 @@ Internet Archive items use XML-based metadata. Key points:
 - Unique and unchangeable once set
 
 For the complete metadata schema reference, see: **https://archive.org/developers/metadata-schema**
+
+## Collections
+
+Collections group related items together. Key points:
+
+- **Only IA staff can create collections** - users must request creation
+- **Minimum 50 items** required for a new collection
+- Items must be related and typically same media type
+- Collection creation takes up to two weeks after request
+
+To request a collection, contact Internet Archive with:
+- List of item identifiers or search query identifying items
+- Desired collection identifier (5-80 chars, alphanumeric only)
+- Collection title and description
+- At least one subject tag
+
+**Public upload collections** (anyone can upload to):
+- `opensource_movies`, `opensource_audio`, `opensource_media` - general media
+- `community_texts`, `community_video`, `community_audio` - community contributions
+
+Other collections restrict uploads to designated uploaders only.
 
 ## Tool Detection and Installation
 
@@ -219,6 +252,9 @@ Use `field:value` syntax to search specific metadata fields:
 | `'mediatype:texts'` | By media type (texts, movies, audio, software, image, data) |
 | `'contributor:smithsonian'` | By contributor |
 | `'language:eng'` | By language code |
+| `'format:pdf'` | Items containing specific file format |
+| `'isbn:9780123456789'` | By ISBN |
+| `'licenseurl:http*by-nc*'` | By Creative Commons license |
 
 #### Range Queries
 
@@ -487,7 +523,21 @@ cat data.gz | ia upload my-item - \
 ia upload --spreadsheet=metadata.csv
 ```
 
-**Note:** Items receive `data` mediatype by default if not specified, and mediatype cannot be changed after upload.
+**Notes:**
+- Items receive `data` mediatype by default if not specified
+- Mediatype can only be changed after upload with admin support
+- Derivative generation takes seconds to days depending on file type and system load
+- Items typically appear in search within minutes, but can take up to 24 hours
+
+### Test Collection
+
+Upload to `test_collection` for validation - items are automatically removed after ~30 days:
+
+```bash
+ia upload my-test-item file.pdf \
+  --metadata="mediatype:texts" \
+  --metadata="collection:test_collection"
+```
 
 ### Identifier Guidelines
 
@@ -686,6 +736,9 @@ See: https://archive.org/developers/internetarchive/parallel.html
 5. **Use checksums** - Add `--checksum` for large uploads to enable resume
 6. **Respect rate limits** - Don't spam requests; add delays for bulk operations
 7. **Test with dry-run** - Use `--dry-run` to preview operations
+8. **Use test_collection first** - Validate uploads before committing to permanent collections
+9. **Zip large file sets** - Bundle many small files into archives before uploading
+10. **Specify language** - Set `language` metadata for proper OCR processing on texts
 
 ## Error Handling
 
@@ -696,6 +749,9 @@ See: https://archive.org/developers/internetarchive/parallel.html
 | "permission denied" | Check credentials at https://archive.org/account/s3.php |
 | "network error" | Retry the operation; check internet connection |
 | "item not found" | Verify the identifier spelling |
+| "429 Too Many Requests" | Rate limited; wait and retry with `Retry-After` header value |
+| Item not appearing in search | Usually appears within minutes; check `ia tasks <identifier>` for pending jobs |
+| Derive task failed | Check filename characters, file format, language metadata |
 
 ## Quick Reference
 
