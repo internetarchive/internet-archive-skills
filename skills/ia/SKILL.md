@@ -168,6 +168,42 @@ export IA_SECRET_ACCESS_KEY="your-secret-key"
 
 Note: Configuration is required for uploads and metadata modifications. Searching and downloading public items works without authentication.
 
+## User-Agent Identification (Required)
+
+**All requests to the Internet Archive must include a proper User-Agent string** that clearly identifies the source of the request. This is critical for AI agents, bots, and automated tools.
+
+The `ia` CLI automatically includes a User-Agent like:
+```
+internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY) Python/3.11.0
+```
+
+When using Claude Code or other AI/LLM agents, **you must set a custom User-Agent** that includes:
+- The tool/agent name and version (e.g., "Claude Code/1.0.0")
+- The model being used if applicable (e.g., "claude-sonnet-4-20250514")
+- Any relevant context about the automation
+
+**CLI:**
+```bash
+ia --user-agent "internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0" download my-item
+```
+
+**INI file (`~/.config/internetarchive/ia.ini`):**
+```ini
+[general]
+user_agent = internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0
+```
+
+**Python API:**
+```python
+from internetarchive import get_session
+
+session = get_session(config={
+    'general': {'user_agent': 'internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0'}
+})
+```
+
+This helps the Internet Archive track usage patterns, troubleshoot issues, and maintain service quality. Always be specific - include version numbers, model identifiers, and enough detail to distinguish your tool from others.
+
 ## Search Operations
 
 Search the Internet Archive catalog:
