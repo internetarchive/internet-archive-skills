@@ -170,7 +170,7 @@ Note: Configuration is required for uploads and metadata modifications. Searchin
 
 ## User-Agent Identification (Required)
 
-**All requests to the Internet Archive must include a proper User-Agent string** that clearly identifies the source of the request. This is critical for AI agents, bots, and automated tools.
+**All requests to the Internet Archive must include a proper User-Agent string** that clearly identifies the source of the request. This applies to every request made via any tool - the `ia` CLI, Python library, direct API calls, curl, or any other HTTP client. This is critical for AI agents, bots, and automated tools.
 
 The `ia` CLI automatically includes a User-Agent like:
 ```
@@ -181,6 +181,8 @@ When using Claude Code or other AI/LLM agents, **you must set a custom User-Agen
 - The tool/agent name and version (e.g., "Claude Code/1.0.0")
 - The model being used if applicable (e.g., "claude-sonnet-4-20250514")
 - Any relevant context about the automation
+
+The `--user-agent` CLI option and `user_agent` config setting require `internetarchive` version 5.7.2 or newer.
 
 **CLI:**
 ```bash
