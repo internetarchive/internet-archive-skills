@@ -852,3 +852,9 @@ For programmatic access beyond the CLI, see the full developer documentation: **
 ### Python Library
 
 For Python integration: [internetarchive library](https://archive.org/developers/internetarchive/)
+
+### TypeScript Library (Third-Party)
+
+A community-maintained TypeScript port is available: [internetarchive-ts](https://github.com/karpour/internetarchive-ts) ([docs](https://karpour.github.io/internetarchive-ts/))
+
+Note: This is a work in progress and not officially maintained by the Internet Archive.
