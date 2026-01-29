@@ -2,6 +2,8 @@
 
 Real-world examples of using the Internet Archive skill with Claude Code.
 
+> **Note:** For comprehensive command reference and query syntax, see [skills/ia/SKILL.md](../skills/ia/SKILL.md).
+
 ## Searching the Archive
 
 ### Find Public Domain Books
@@ -304,23 +306,26 @@ ia search 'uploader:your@email.com'
 ### Checking if Identifier is Available
 
 ```bash
-# If this returns nothing, the identifier is available
-ia metadata desired-identifier-name
+ia metadata desired-identifier-name --exists
 ```
 
 ### Downloading Specific Format
 
-```bash
-# Download only the EPUB versions of books
-ia download book-collection --glob="*.epub"
+Use `--glob` to match filenames by pattern, or `--format` to download files by their Internet Archive format type:
 
-# Download only high-res images
-ia download photo-archive --glob="*_large.jpg"
+```bash
+# --glob matches filename patterns
+ia download nasa --glob='*.jpg'
+
+# --format matches the IA format field (e.g., "Metadata", "JPEG", "MPEG4")
+ia download nasa --format=Metadata
 ```
 
-### Excluding Derivative Files
+The difference: `--glob` filters by filename (e.g., `*.mp4`), while `--format` filters by the format field in the item's file metadata (e.g., `h.264`, `Ogg Video`, `Metadata`).
 
-Archive.org creates derivative files automatically. To download only originals:
+### Excluding Files
+
+Use `--exclude` to skip files matching a glob pattern:
 
 ```bash
 ia download my-item --exclude="*_thumb*" --exclude="*_spectrogram*"
