@@ -172,27 +172,27 @@ Note: Configuration is required for uploads and metadata modifications. Searchin
 
 **All requests to the Internet Archive must include a proper User-Agent string** that clearly identifies the source of the request. This applies to every request made via any tool - the `ia` CLI, Python library, direct API calls, curl, or any other HTTP client. This is critical for AI agents, bots, and automated tools.
 
-The `ia` CLI automatically includes a User-Agent like:
+The `ia` CLI automatically includes a default User-Agent with your access key:
 ```
 internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY) Python/3.11.0
 ```
 
-When using Claude Code or other AI/LLM agents, **you must set a custom User-Agent** that includes:
+When using Claude Code or other AI/LLM agents, **you must append a custom suffix** that includes:
 - The tool/agent name and version (e.g., "Claude Code/1.0.0")
 - The model being used if applicable (e.g., "claude-sonnet-4-20250514")
 - Any relevant context about the automation
 
-The `--user-agent` CLI option and `user_agent` config setting require `internetarchive` version 5.7.2 or newer.
+The `--user-agent-suffix` CLI option and `user_agent_suffix` config setting require `internetarchive` version 5.7.2 or newer. The default User-Agent (including access key) is always sent - your suffix is appended to it.
 
 **CLI:**
 ```bash
-ia --user-agent "internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0" download my-item
+ia --user-agent-suffix "Claude Code/1.0.0 (claude-sonnet-4-20250514)" download my-item
 ```
 
 **INI file (`~/.config/internetarchive/ia.ini`):**
 ```ini
 [general]
-user_agent = internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0
+user_agent_suffix = Claude Code/1.0.0 (claude-sonnet-4-20250514)
 ```
 
 **Python API:**
@@ -200,8 +200,13 @@ user_agent = internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code
 from internetarchive import get_session
 
 session = get_session(config={
-    'general': {'user_agent': 'internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY; Claude Code/1.0.0; claude-sonnet-4-20250514) Python/3.11.0'}
+    'general': {'user_agent_suffix': 'Claude Code/1.0.0 (claude-sonnet-4-20250514)'}
 })
+```
+
+The resulting User-Agent will look like:
+```
+internetarchive/5.7.2 (Linux x86_64; N; en; ACCESS_KEY) Python/3.11.0 Claude Code/1.0.0 (claude-sonnet-4-20250514)
 ```
 
 This helps the Internet Archive track usage patterns, troubleshoot issues, and maintain service quality. Always be specific - include version numbers, model identifiers, and enough detail to distinguish your tool from others.
