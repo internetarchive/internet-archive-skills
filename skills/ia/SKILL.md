@@ -9,6 +9,27 @@ argument-hint: [search query | identifier | command]
 
 This skill enables interaction with the Internet Archive (archive.org) using the `ia` command-line tool from the `internetarchive` Python package.
 
+## Scope
+
+This skill covers the archive.org **catalog**: items, uploads, downloads, metadata, and
+full-text search. It does **not** cover the Wayback Machine. The `ia` CLI has no `wayback`
+subcommand, so questions like "what did this website look like in 2015" or "how many
+captures does this domain have" cannot be answered with it.
+
+For Wayback work, query the CDX API directly:
+
+```bash
+# All captures of a domain, one row per capture
+curl -s 'https://web.archive.org/cdx/search/cdx?url=example.com&matchType=domain&output=json&fl=timestamp,original,statuscode,mimetype'
+
+# Fetch a specific capture, unmodified (the id_ suffix skips the archive's toolbar injection)
+curl -s 'https://web.archive.org/web/20150103170526id_/http://example.com/'
+```
+
+Note that `https://archive.org/wayback/available?url=...` is not a reliable existence check.
+It has been observed returning `{"archived_snapshots": {}}` for domains that have thousands
+of captures in CDX. Prefer CDX.
+
 ## Items
 
 An item is the fundamental unit on archive.org - a logical grouping of related files sharing common metadata. An item can be a book, a song, an album, a dataset, a movie, an image or set of images, etc. Each item has a unique identifier across the entire archive.
@@ -192,8 +213,15 @@ ia --user-agent-suffix "Claude Code/1.0.0 (claude-sonnet-4-20250514)" download m
 **INI file (`~/.config/internetarchive/ia.ini`):**
 ```ini
 [general]
+screenname =
 user_agent_suffix = Claude Code/1.0.0 (claude-sonnet-4-20250514)
 ```
+
+The empty `screenname` line is required. If you hand-write an `ia.ini` containing a
+`[general]` section without it, `ia` stops falling back to its defaults and several
+subcommands abort with `configparser.NoOptionError: No option 'screenname' in section:
+'general'`. This bites when setting a User-Agent suffix on a machine that has never run
+`ia configure`, which is the common case for read-only agent use.
 
 **Python API:**
 ```python
@@ -224,14 +252,33 @@ ia search '<query>'
 | Parameter | Description |
 |-----------|-------------|
 | `--itemlist` | Output identifiers only, one per line |
-| `-n, --num-found` | Print only the count of results |
+| `-n, --num-found` | Print only the count of results (see "Known issue" below, currently unreliable) |
 | `-s, --sort` | Sort results: `--sort='field desc'` or `--sort='field asc'` |
 | `-f, --field` | Return specific metadata fields (repeatable) |
 | `-F, --fts` | Full-text search (search within text content, not just metadata) |
 | `--parameters` | Raw query parameters: `--parameters="page=N&rows=N"` |
 
+### Known issue: `--num-found` is unreliable
+
+As of `internetarchive` 5.11.0, `ia search '<query>' -n` returns the same value for every
+query, including queries that match nothing. The `POST /services/search/v1/scrape` endpoint
+it relies on responds `{"items":[],"count":0,"total":1}` regardless of the query, and the
+client reports that `total` verbatim. Tracked upstream:
+https://github.com/jjjake/internetarchive/issues/797
+
+Do not use `-n` for counts until that is resolved. Use `advancedsearch.php` instead, which
+returns correct values:
+
 ```bash
-# Get result count only
+curl -s 'https://archive.org/advancedsearch.php?q=mediatype:texts&rows=0&output=json' \
+  | jq '.response.numFound'
+```
+
+Remember to send an identifying User-Agent with direct API calls too, per the
+"User-Agent Identification" section above.
+
+```bash
+# Get result count only (see known issue above)
 ia search 'collection:nasa' -n
 
 # Sort by date descending
